@@ -1,0 +1,5 @@
+.terraform
+.terraform.lock.hcl
+foo_ec2_key*
+infra/ansible-inventory.yml
+terraform.tfstate*

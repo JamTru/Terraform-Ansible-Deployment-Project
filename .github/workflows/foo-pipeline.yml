@@ -1,0 +1,10 @@
+name: Foo Pipeline
+run-name: Pipeline Ran On ${{github.ref_name}} by ${{github.actor}}
+on: [push]
+
+jobs:
+  filler_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Filler-Step
+        run: echo 'Hello World'
