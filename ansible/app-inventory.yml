@@ -1,0 +1,4 @@
+app_server:
+  hosts:
+    app1:
+      ansible_host: {"Insert Here"}

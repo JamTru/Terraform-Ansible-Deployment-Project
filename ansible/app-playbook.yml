@@ -1,0 +1,17 @@
+---
+- name: Configure App With Docker Image
+  hosts: app_servers
+  remote_user: ubuntu
+  become: yes
+
+  tasks: # Adapted From https://medium.com/@prashanth31.2000/automating-docker-setup-with-ansible-playbook-fff720be03dc
+    - name: Install Docker Engine
+      ansible.builtin.package:
+        name: docker
+        state: present
+    - name: Start and Enable Docker service
+      ansible.builtin.package:
+        name: docker
+        state: started
+        enabled: yes
+    - name: Pull App Image from Docker Hub
