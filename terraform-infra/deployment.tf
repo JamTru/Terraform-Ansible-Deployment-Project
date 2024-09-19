@@ -1,5 +1,7 @@
-variable "app_name" {}
-variable "my_ip_address" {}
+variable "app_name" {
+    type = string
+    default = "Foo App"
+}
 terraform {
     required_providers {
         aws = {
@@ -34,7 +36,7 @@ resource "aws_instance" "app" {
     security_groups = [aws_security_group.app_access_config.name]
 
     tags = {
-        Name = "${var.app_name} server"
+        Name = "${var.app_name} application"
     }
 }
 
@@ -44,7 +46,7 @@ resource "aws_instance" "database" {
     key_name = aws_key_pair.admin.key_name
     security_groups = [aws_security_group.db_access_config.name]
     tags = {
-        Name = "${var.app_name} server"
+        Name = "${var.app_name} database"
     }
 }
 
@@ -94,9 +96,16 @@ resource "aws_security_group" "db_access_config" {
 }
 
 
-output "vm_public_hostname" {
-    value = {
-        public_hostname: [aws_instance.app.public_dns, aws_instance.database.public_dns],
-        public_ip_address: [aws_instance.app.public_ip, aws_instance.database.public_ip]
-    }
+output "app_public_hostname" {
+    value = aws_instance.app.public_dns
+}
+output "app_public_ip" {
+    value = aws_instance.app.public_ip
+}
+output "db_public_hostname" {
+    value = aws_instance.database.public_dns
+}
+
+output "db_public_ip" {
+    value = aws_instance.database.public_ip
 }

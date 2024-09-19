@@ -5,3 +5,7 @@
 foo_ec2_key*
 infra/ansible-inventory.yml
 terraform.tfstate*
+
+
+terraform-infra/local_pub_key.pub
+terraform-infra/local_pub_key

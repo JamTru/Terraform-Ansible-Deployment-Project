@@ -1,0 +1,1 @@
+path_to_ssh_public_key = "local_pub_key.pub"
