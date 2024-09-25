@@ -29,3 +29,8 @@ app_dns=$(terraform output -raw app_public_hostname)
 app_ip=$(terraform output -raw app_public_ip)
 db_dns=$(terraform output -raw db_public_hostname)
 db_ip=$(terraform output -raw db_public_ip)
+
+# Build Docker Image
+DOCKER_IMAGE_TAG="mattcul/assignment2app:1.0.0"
+DOCKERFILE_PATH="./app/Dockerfile"
+docker buildx build --platform linux/amd64,linux/arm64 -t ${DOCKER_IMAGE_TAG} -f ${DOCKERFILE_PATH} . --push
