@@ -1,6 +1,6 @@
 ---
 - name: Configure App With Docker Image
-  hosts: app_servers
+  hosts: "{{app_ip}}"
   remote_user: ubuntu
   become: yes
   vars:

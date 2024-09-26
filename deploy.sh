@@ -30,7 +30,19 @@ app_ip=$(terraform output -raw app_public_ip)
 db_dns=$(terraform output -raw db_public_hostname)
 db_ip=$(terraform output -raw db_public_ip)
 
-# Build Docker Image
+# FOR ABEL
+# MODIFY TERRAFORM TO OUTPUT AN .ini FILE CONTAINING THE DIFFERENT IPs
+# USE .ini FILE AS INVENTORY FILE
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ini_inventory.html
+
+
 DOCKER_IMAGE_TAG="mattcul/assignment2app:1.0.0"
-DOCKERFILE_PATH="./app/Dockerfile"
-docker buildx build --platform linux/amd64,linux/arm64 -t ${DOCKER_IMAGE_TAG} -f ${DOCKERFILE_PATH} . --push
+DOCKERFILE_PATH="../app/Dockerfile"
+
+# Run Ansible Playbook for Database First
+cd ../ansible
+echo "Creating Database"
+ansible-playbook database-playbook.yml -e "db_ip=${db_ip}" --private-key ../terraform-infra/${path_to_ssh_key}
+
+# Run Ansible Playbook for Application
+ansible-playbook app-playbook.yml -e "app_ip=${app_ip}" --private-key ../terraform-infra/${path_to_ssh_key}
