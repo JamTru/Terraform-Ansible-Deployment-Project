@@ -52,7 +52,7 @@ resource "aws_instance" "database" {
 
 resource "aws_key_pair" "admin" {
     key_name = "admin-key-${var.app_name}"
-    public_key = file("/root/.ssh/github_sdo_key.pub")
+    public_key = file("~/.ssh/github_sdo_key.pub")
 }
 
 resource "aws_security_group" "app_access_config" {
@@ -96,6 +96,9 @@ resource "aws_security_group" "db_access_config" {
 }
 
 
+output "ini_file" {
+    value = "inventory.ini"  
+}
 output "app_public_hostname" {
     value = aws_instance.app.public_dns
 }

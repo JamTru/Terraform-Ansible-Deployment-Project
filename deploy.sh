@@ -25,10 +25,27 @@ echo "Applying Terraform Configuration"
 terraform apply -var="my_ip_address=$ip_address"
 
 
+ini_file=$(terraform output ini_file)
+
 app_dns=$(terraform output -raw app_public_hostname)
 app_ip=$(terraform output -raw app_public_ip)
 db_dns=$(terraform output -raw db_public_hostname)
 db_ip=$(terraform output -raw db_public_ip)
+
+ini_content="
+[app]
+hostname = ${app_dns}
+ip = ${app_ip}
+
+[database]
+hostname = ${db_dns}
+ip = ${db_ip}
+"
+
+# Write the content to the INI file
+echo "$ini_content" > "$ini_file"
+
+echo "Successfully generated INI file: $ini_file"
 
 # FOR ABEL
 # MODIFY TERRAFORM TO OUTPUT AN .ini FILE CONTAINING THE DIFFERENT IPs

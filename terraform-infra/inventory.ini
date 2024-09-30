@@ -1,0 +1,9 @@
+
+[app]
+hostname = ec2-34-201-45-190.compute-1.amazonaws.com
+ip = 34.201.45.190
+
+[database]
+hostname = ec2-3-89-31-14.compute-1.amazonaws.com
+ip = 3.89.31.14
+
