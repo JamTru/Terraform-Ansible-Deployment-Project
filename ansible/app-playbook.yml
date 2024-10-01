@@ -1,12 +1,12 @@
 ---
 - name: Configure App With Docker Image
-  hosts: "{{app_ip}}"
+  hosts: app
   remote_user: ubuntu
   become: yes
   vars:
     container_count: 1
     default_container_name: Alpine's Foo App
-    default_container_image: "{{app_container}}"
+    default_container_image: "{{app_image}}"
 
   # Adapated from Digital Ocean's Docker Installation Via Ansible on Ubuntu Guide https://www.digitalocean.com/community/tutorials/how-to-use-ansible-to-install-and-set-up-docker-on-ubuntu-22-04
   tasks:

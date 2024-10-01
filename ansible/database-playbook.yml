@@ -1,6 +1,6 @@
 ---
 - name: Configure Database With Docker Image
-  hosts: app1
+  hosts: database
   remote_user: ubuntu
   become: yes
   vars:

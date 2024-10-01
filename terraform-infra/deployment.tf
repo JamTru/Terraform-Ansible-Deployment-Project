@@ -97,7 +97,7 @@ resource "aws_security_group" "db_access_config" {
 
 
 output "ini_file" {
-    value = "inventory.ini"  
+    value = "inventory.ini"
 }
 output "app_public_hostname" {
     value = aws_instance.app.public_dns

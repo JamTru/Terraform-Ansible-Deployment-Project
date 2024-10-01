@@ -13,8 +13,15 @@ aws sts get-caller-identity
 
 cd terraform-infra
 path_to_ssh_key="local_pub_key"
-echo "Creating Key Pair at ${path_to_ssh_key}"
-ssh-keygen -C user@SDOa2 -f "${path_to_ssh_key}" -N ''
+
+
+if [ -f "$path_to_ssh_key" ]; then
+    echo "Public key exists: $path_to_ssh_key"
+else
+    echo "Creating Key Pair at ${path_to_ssh_key}"
+    ssh-keygen -C user@SDOa2 -f "${path_to_ssh_key}" -N ''
+fi
+
 ip_address=$(curl icanhazip.com)
 
 echo "Initialise Terraform"
@@ -32,34 +39,33 @@ app_ip=$(terraform output -raw app_public_ip)
 db_dns=$(terraform output -raw db_public_hostname)
 db_ip=$(terraform output -raw db_public_ip)
 
+
 ini_content="
 [app]
-hostname = ${app_dns}
-ip = ${app_ip}
+app1 ansible_host=${app_dns} app_ip=${app_ip}
 
 [database]
-hostname = ${db_dns}
-ip = ${db_ip}
+db1 ansible_host=${db_dns} db_ip=${db_ip}
 "
 
 # Write the content to the INI file
-echo "$ini_content" > "$ini_file"
+echo "$ini_content" > $ini_file
+
+# Strip Quotation Marks that result from Terraform Output
+# We don't know why it keeps adding quotation marks
+mv '"inventory.ini"' inventory.ini
 
 echo "Successfully generated INI file: $ini_file"
 
-# FOR ABEL
-# MODIFY TERRAFORM TO OUTPUT AN .ini FILE CONTAINING THE DIFFERENT IPs
-# USE .ini FILE AS INVENTORY FILE
-# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/ini_inventory.html
-
 
 DOCKER_IMAGE_TAG="mattcul/assignment2app:1.0.0"
-DOCKERFILE_PATH="../app/Dockerfile"
+DOCKERFILE_PATH="app/Dockerfile"
+INI_FILE="terraform-infra/inventory.ini"
 
 # Run Ansible Playbook for Database First
-cd ../ansible
+cd ..
 echo "Creating Database"
-ansible-playbook database-playbook.yml -e "db_ip=${db_ip}" --private-key ../terraform-infra/${path_to_ssh_key}
+ansible-playbook ansible/database-playbook.yml -i ${INI_FILE}  --private-key "terraform-infra/${path_to_ssh_key}"
 
 # Run Ansible Playbook for Application
-ansible-playbook app-playbook.yml -e "app_ip=${app_ip}" --private-key ../terraform-infra/${path_to_ssh_key}
+ansible-playbook ansible/app-playbook.yml -i ${INI_FILE} -e "app_container=${DOCKER_IMAGE_TAG}" --private-key /terraform-infra/${path_to_ssh_key}
