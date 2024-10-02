@@ -5,27 +5,11 @@
   become: yes
   vars:
     container_count: 1
-    default_container_name: Alpine's Foo App
+    default_container_name: Alpine_Foo_App
     default_container_image: "{{app_image}}"
 
   # Adapated from Digital Ocean's Docker Installation Via Ansible on Ubuntu Guide https://www.digitalocean.com/community/tutorials/how-to-use-ansible-to-install-and-set-up-docker-on-ubuntu-22-04
   tasks:
-    - name: Install Aptitude
-      apt:
-        name: aptitude
-        state: latest
-        update_cache: true
-
-    - name: Install Required System Packages
-      apt:
-        pkg:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - software-properties-common
-        state: latest
-        update_cache: true
-
     - name: Add Docker GPG apt Key
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
@@ -51,4 +35,9 @@
       community.docker.docker_container:
         name: "{{ default_container_name }}"
         image: "{{ default_container_image }}"
-        state: present
+        state: started
+        detached: true
+        env:
+          DB_PORT: "5432"
+          DB_USERNAME: "pete"
+          DB_PASSWORD: "devops"

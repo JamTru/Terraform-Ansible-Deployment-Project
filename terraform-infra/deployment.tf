@@ -87,19 +87,34 @@ resource "aws_security_group" "db_access_config" {
     name = "db_port_${var.app_name}"
     # SSH
     ingress {
-        from_port = 22
+        from_port = 0
         to_port = 22
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
       # PostgreSQL in
     ingress {
-        from_port   = 5432
+        from_port   = 0
         to_port     = 5432
         protocol    = "tcp"
-        cidr_blocks = ["${var.my_ip_address}/32"]
+        cidr_blocks = ["0.0.0.0/0"]
     }
 
+    # HTTP in
+    ingress {
+        from_port = 0
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    # HTTPS out
+    egress {
+        from_port = 0
+        to_port = 443
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
 

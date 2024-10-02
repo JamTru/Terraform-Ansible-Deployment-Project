@@ -68,4 +68,4 @@ echo "Creating Database"
 ansible-playbook ansible/database-playbook.yml -i ${INI_FILE}  --private-key "terraform-infra/${path_to_ssh_key}"
 
 # Run Ansible Playbook for Application
-ansible-playbook ansible/app-playbook.yml -i ${INI_FILE} -e "app_container=${DOCKER_IMAGE_TAG}" --private-key /terraform-infra/${path_to_ssh_key}
+ansible-playbook ansible/app-playbook.yml -i ${INI_FILE} -e "app_image=${DOCKER_IMAGE_TAG}" --private-key "terraform-infra/${path_to_ssh_key}"
