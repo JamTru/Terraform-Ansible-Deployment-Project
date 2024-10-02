@@ -52,7 +52,7 @@ resource "aws_instance" "database" {
 
 resource "aws_key_pair" "admin" {
     key_name = "admin-key-${var.app_name}"
-    public_key = file("~/.ssh/github_sdo_key.pub")
+    public_key = file(var.path_to_ssh_public_key)
 }
 
 resource "aws_security_group" "app_access_config" {
@@ -85,9 +85,16 @@ resource "aws_security_group" "app_access_config" {
 
 resource "aws_security_group" "db_access_config" {
     name = "db_port_${var.app_name}"
+    # SSH
+    ingress {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
       # PostgreSQL in
     ingress {
-        from_port   = 0
+        from_port   = 5432
         to_port     = 5432
         protocol    = "tcp"
         cidr_blocks = ["${var.my_ip_address}/32"]

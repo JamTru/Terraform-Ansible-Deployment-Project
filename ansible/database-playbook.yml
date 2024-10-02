@@ -4,6 +4,7 @@
   remote_user: ubuntu
   become: yes
   vars:
+    ansible_ssh_timeout: 60
     default_container_name: Foo App Database
     default_container_image: postgres:14.7
 
