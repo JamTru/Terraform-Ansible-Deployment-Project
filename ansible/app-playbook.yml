@@ -36,8 +36,12 @@
         name: "{{ default_container_name }}"
         image: "{{ default_container_image }}"
         state: started
-        detached: true
+        detach: true
         env:
+          DB_HOSTNAME: "{{hostvars['db1']['db_ip']}}"
           DB_PORT: "5432"
           DB_USERNAME: "pete"
           DB_PASSWORD: "devops"
+          PORT: "3001"
+        ports:
+          - "80:3001"

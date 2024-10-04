@@ -36,10 +36,13 @@
       community.docker.docker_container:
         name: "{{ default_container_name }}"
         image: "{{ default_container_image }}"
-        state: present
+        state: started
+        detach: true
+        ports:
+          - "5432:5432"
         env:
           POSTGRES_PASSWORD: devops
           POSTGRES_USER: pete
           POSTGRES_DB: foo
         volumes:
-          - ..devops/misc/snapshot-prod-data.sql
+          - "./misc/snapshot-prod-data.sql"
