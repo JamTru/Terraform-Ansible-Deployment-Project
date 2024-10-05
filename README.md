@@ -5,24 +5,38 @@
 - Full Name/Names: **Jamie Truong | Abel John**
 - Student ID/IDs: **S3947728 | S3953018**
 
-## Solution design
+## Contents
 
+- [Summary](#summary)
+  - [Tools Used](#tools-used)
+- [Deployment](#deployment)
+  - [Deploying from Shell Script](#deploying-from-shell-script)
+  - [GitHub Actions Workflow](#github-actions-workflow)
+- [Infrastructure](#infrastructure)
+  - [Terraform](#terraform)
+  - [Ansible](#ansible)
+- [Diagrams](#diagrams)
 
-### Infrastructure
+## Summary
+The solution is designed to accomplish Alpine's business goal of automating their deployment process with greater resiliency by utilising Terraform and Ansible as the primary tools to handle the creation and configuration of the underlying infrastructure the Foo application and database will be hosted on.
 
+The tools are designed such that they will automate the process of provisioning resources and configuring them according to specifications desired by the developer when deploying.
 
-#### Key data flows
+Terraform is responsible for the creation of virtual private cloud along with necessary resources on AWS. It will read a set of configurations pre-written for it, then automatically handle the planning and execution of creating resources based on dependencies without needing human input, thus preventing human error in either the specific configurations of each individual resource or the order of creation of resources.
 
+Ansible is responsible for the configuration of the virtual private cloud resources, by running a defined order of commands to execute according to a `playbook` file. This is done in conjunction with Docker, which containerises the application into an individual image that handles its own dependencies and makes the application system-agnostic in terms of deployment. This thus automates the need to SSH into the individual containers and run all the individual commands, making it far more efficient and eliminates potential for human error.
 
-### Deployment process
+Furthermore, the only inputs for the solution come from needing the individual deploying the script to confirm changes, such as accepting the initial resource changes from Terraform and confirming the usage of private keys in the EC2 instances. Otherwise, the deployment script automates the need for copy pasting over variables such as IP addresses, docker images, directory locations etc. which eliminates another potential area for human error from the deployment process.
 
+### Tools Used
+- GitHub (GitHub Org)
+- GitHub Actions – used for creating the pipelines
+- Terraform
+- Ansible
+- AWS
+- Docker
 
-#### Prerequisites
-
-
-#### Description of the GitHub Actions workflow
-
-
+## Deployment
 
 #### Deploying from Shell Script
 
@@ -48,40 +62,14 @@ The deployment shell script will handle the following tasks in this sequence:
 7.  Echo HTTP Link to Application
     > Note: This is purely for debugging purposes as it provides an easy method of accessing application from terminal.
 
-#### Validating that the app is working
+#### GitHub Actions Workflow
 
 
+## Infrastructure
+### Terraform
 
-## Contents of this repo
-```
-.
-├── ./.github
-│   └── ./.github/workflows
-│       └── ./.github/workflows/foo-pipeline.yml
-├── ./README.md
-├── ./ansible
-│   ├── ./ansible/app-playbook.yml
-│   ├── ./ansible/database-playbook.yml
-│   └── ./ansible/files
-│       └── ./ansible/files/snapshot-prod-data.sql
-├── ./app
-│   ├── ./app/Dockerfile
-│   ├── ./app/index.js
-│   ├── ./app/package.json
-│   └── ./app/views
-│       └── ./app/views/pages
-│           ├── ./app/views/pages/foos.ejs
-│           └── ./app/views/pages/index.ejs
-├── ./deploy.sh
-├── ./misc
-│   ├── ./misc/how-to-build-app-docker-image.txt
-│   ├── ./misc/how-to-deploy.txt
-│   ├── ./misc/snapshot-prod-data.sql
-│   └── ./misc/state-bucket-infra.tf
-├── ./output.txrt
-├── ./output.txt
-└── ./terraform-infra
-    ├── ./terraform-infra/deployment.tf
-    ├── ./terraform-infra/vars.tf
-    └── ./terraform-infra/you.auto.tfvars
-```
+
+### Ansible
+
+
+## Diagrams
