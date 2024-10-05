@@ -1,6 +1,7 @@
 variable "app_name" {
     type = string
     default = "Foo App"
+    description = "The Name of the Application. Will Automatically Change EC2 Names on deployment."
 }
 terraform {
     required_providers {

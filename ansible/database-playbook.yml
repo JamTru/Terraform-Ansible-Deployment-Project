@@ -4,10 +4,9 @@
   remote_user: ubuntu
   become: yes
   vars:
-    ansible_ssh_timeout: 60
     default_container_name: Foo_App_Database
     default_container_image: postgres:14.7
-    sql_file_path: "./misc/snapshot-prod-data.sql"
+    sql_file_path: "./snapshot-prod-data.sql"
 
   # Adapated from Digital Ocean's Docker Installation Via Ansible on Ubuntu Guide https://www.digitalocean.com/community/tutorials/how-to-use-ansible-to-install-and-set-up-docker-on-ubuntu-22-04
   tasks:
@@ -51,16 +50,4 @@
           POSTGRES_USER: pete
           POSTGRES_DB: foo
         volumes:
-          - "{{ sql_file_path }}"
-
-    - name: Wait for PostgreSQL to be ready
-      wait_for:
-        port: 5432
-        delay: 10
-        timeout: 60
-
-    - name: Execute SQL file to create tables and insert data
-      community.docker.docker_container_exec:
-        container: "{{ default_container_name }}"
-        command: cd
-        command: psql -U pete -d foo -f ./misc/snapshot-prod-data.sql/snapshot-prod-data.sql
+          - "{{ sql_file_path }}:/docker-entrypoint-initdb.d/init.sql"
