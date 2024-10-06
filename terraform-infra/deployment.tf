@@ -29,7 +29,9 @@ data "aws_ami" "ubuntu" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16" 
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support = true
+  enable_dns_hostnames = true
 
   tags = {
     Name = "main"
@@ -43,14 +45,15 @@ variable "public_subnet_cidrs" {
 }
 
 resource "aws_subnet" "public_subnets" {
- count      = length(var.public_subnet_cidrs)
- vpc_id     = aws_vpc.main.id
- cidr_block = element(var.public_subnet_cidrs, count.index)
- availability_zone = element(var.azs, count.index)
- 
- tags = {
-   Name = "Public Subnet ${count.index + 1}"
- }
+
+  count      = length(var.public_subnet_cidrs)
+  vpc_id     = aws_vpc.main.id
+  cidr_block = element(var.public_subnet_cidrs, count.index)
+  availability_zone = element(var.azs, count.index)
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "Public Subnet ${count.index + 1}"
+  }
 }
 
 variable "azs" {
@@ -72,7 +75,7 @@ resource "aws_internet_gateway" "main" {
 //  ami = data.aws_ami.ubuntu.id
 //  instance_type = "t2.micro"
 //  key_name = aws_key_pair.admin.key_name
-//  security_groups = [aws_security_group.app_access_config.name] 
+//  security_groups = [aws_security_group.app_access_config.name]
 //  subnet_id = aws_subnet.public_subnet_1.id
 //  tags = {
 //    Name = "${var.app_name} application"
@@ -83,7 +86,7 @@ resource "aws_internet_gateway" "main" {
 //  ami = data.aws_ami.ubuntu.id
 //  instance_type = "t2.micro"
 //  key_name = aws_key_pair.admin.key_name
-//  security_groups = [aws_security_group.app_access_config.name] 
+//  security_groups = [aws_security_group.app_access_config.name]
 //  subnet_id = aws_subnet.public_subnet_2.id
 //  tags = {
 //    Name = "${var.app_name} application"
@@ -98,6 +101,7 @@ resource "aws_instance" "app" {
   //security_groups = [aws_security_group.app_access_config.name]
   vpc_security_group_ids = [aws_security_group.app_access_config.id]
   subnet_id = aws_subnet.public_subnets[count.index].id
+  associate_public_ip_address = true
   tags = {
     Name = "${var.app_name} application - ${count.index}"
   }
@@ -144,7 +148,7 @@ resource "aws_lb" "test" {
   security_groups    = [aws_security_group.app_access_config.id]
   subnets            = [for subnet in aws_subnet.public_subnets : subnet.id]
 
-  enable_deletion_protection = true
+  enable_deletion_protection = false
 
 
   tags = {
@@ -153,13 +157,13 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "main" {
-  name = "target-group-Foo-App" 
+  name = "target-group-Foo-App"
   port        = 80
   ip_address_type = "ipv4"
   protocol    = "HTTP"
-  target_type = "ip"
+  target_type = "instance"
   vpc_id = aws_vpc.main.id
-  
+
   health_check {
     interval = 30
     timeout = 5
@@ -246,7 +250,7 @@ resource "aws_security_group" "app_access_config" {
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
-} 
+}
 
 resource "aws_security_group" "db_access_config" {
     name = "db_port_${var.app_name}"
@@ -262,13 +266,13 @@ resource "aws_security_group" "db_access_config" {
 
 
 output "ini_file" {
-    value = "inventory.ini"  
+    value = "inventory.ini"
 }
 output "app_public_hostname" {
-  value = "${aws_instance.app.*.public_dns}"
+  value = aws_instance.app[*].public_dns
 }
 output "app_public_ip" {
-    value = "${aws_instance.app.*.public_ip}"
+    value = aws_instance.app[*].public_ip
 }
 output "db_public_hostname" {
     value = aws_instance.database.public_dns

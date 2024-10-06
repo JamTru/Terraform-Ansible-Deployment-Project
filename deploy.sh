@@ -34,8 +34,8 @@ terraform apply -var="my_ip_address=$ip_address"
 
 # Define Outputs as Variable
 ini_file=$(terraform output ini_file)
-app_dns=$(terraform output -raw app_public_hostname)
-app_ip=$(terraform output -raw app_public_ip)
+app_dns=$(terraform output -json app_public_hostname)
+app_ip=$(terraform output -json app_public_ip)
 db_dns=$(terraform output -raw db_public_hostname)
 db_ip=$(terraform output -raw db_public_ip)
 
