@@ -67,7 +67,7 @@ The deployment shell script will handle the following tasks in this sequence:
 
 ## Infrastructure
 ### Terraform
-
+![ICT  - Page 14](https://github.com/user-attachments/assets/1f515390-07d4-44a8-887b-144234f1adf9)
 
 ### Ansible
 
