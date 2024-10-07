@@ -69,6 +69,23 @@ The deployment shell script will handle the following tasks in this sequence:
 ### Terraform
 ![ICT  - Page 14](https://github.com/user-attachments/assets/1f515390-07d4-44a8-887b-144234f1adf9)
 
+VPC and Subnets
+- Creates a VPC with CIDR block 10.0.0.0/16
+- Defines two public subnets (10.0.1.0/24 and 10.0.2.0/24) across two Availability Zones (us-east-1a and us-east-1b) for deploying the application instances. 
+
+Security Groups
+- 2 Security groups are created for both app and database instances 
+
+Application Instances
+- 2 app instances using t2 micro instance type launched in two different public subnets 
+
+Load Balancer
+- Distribute traffic across the two application instances
+
+Database Instance
+- Creates a single database instance using the same t2.micro instance type with the same AMI as the application instances
+- Launches the database instance in a public subnet
+
 ### Ansible
 
 
