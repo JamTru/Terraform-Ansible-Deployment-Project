@@ -34,20 +34,22 @@ terraform apply -var="my_ip_address=$ip_address"
 
 # Define Outputs as Variable
 ini_file=$(terraform output ini_file)
-app_dns=$(terraform output -json app_public_hostname)
-app_ip=$(terraform output -json app_public_ip)
+app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')
+app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')
+app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')
+app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')
 db_dns=$(terraform output -raw db_public_hostname)
 db_ip=$(terraform output -raw db_public_ip)
 
 # Define Contents of ini file
 ini_content="
 [app]
-app1 ansible_host=${app_dns} app_ip=${app_ip}
+app1 ansible_host=${app1_dns} app_ip=${app1_ip}
+app2 ansible_host=${app2_dns} app_ip=${app2_ip}
 
 [database]
 db1 ansible_host=${db_dns} db_ip=${db_ip}
 "
-
 # Write the content to the INI file
 echo "$ini_content" > $ini_file
 
