@@ -86,6 +86,9 @@ Database Instance
 - Creates a single database instance using the same t2.micro instance type with the same AMI as the application instances
 - Launches the database instance in a public subnet
 
+S3
+- Stores the terraform state file in the cloud 
+
 ### Ansible
 
 
