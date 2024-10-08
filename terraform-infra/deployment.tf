@@ -1,6 +1,7 @@
 variable "app_name" {
     type = string
     default = "Foo_App"
+    description = "Variable for Naming the EC2 Instances. Change to modify the name output."
 }
 terraform {
     required_providers {
@@ -45,7 +46,6 @@ variable "public_subnet_cidrs" {
 }
 
 resource "aws_subnet" "public_subnets" {
-
   count      = length(var.public_subnet_cidrs)
   vpc_id     = aws_vpc.main.id
   cidr_block = element(var.public_subnet_cidrs, count.index)
@@ -71,34 +71,11 @@ resource "aws_internet_gateway" "main" {
   }
 }
 
-//resource "aws_instance" "app" {
-//  ami = data.aws_ami.ubuntu.id
-//  instance_type = "t2.micro"
-//  key_name = aws_key_pair.admin.key_name
-//  security_groups = [aws_security_group.app_access_config.name]
-//  subnet_id = aws_subnet.public_subnet_1.id
-//  tags = {
-//    Name = "${var.app_name} application"
-//  }
-//}
-//
-//resource "aws_instance" "app2" {
-//  ami = data.aws_ami.ubuntu.id
-//  instance_type = "t2.micro"
-//  key_name = aws_key_pair.admin.key_name
-//  security_groups = [aws_security_group.app_access_config.name]
-//  subnet_id = aws_subnet.public_subnet_2.id
-//  tags = {
-//    Name = "${var.app_name} application"
-//  }
-//}
-
 resource "aws_instance" "app" {
   count = 2
-  ami           = data.aws_ami.ubuntu.id
+  ami = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
-  key_name      = aws_key_pair.admin.key_name
-  //security_groups = [aws_security_group.app_access_config.name]
+  key_name = aws_key_pair.admin.key_name
   vpc_security_group_ids = [aws_security_group.app_access_config.id]
   subnet_id = aws_subnet.public_subnets[count.index].id
   associate_public_ip_address = true
@@ -128,29 +105,13 @@ resource "aws_route_table_association" "public_subnet" {
 }
 
 
-//resource "aws_lb" "main" {
-//  name = "lb-Foo-App"
-//  internal = false
-//  load_balancer_type = "application"
-//  security_groups = [aws_security_group.app_access_config.name]
-//  //subnets = [aws_subnet.public_subnets_1.id, aws_subnet.public_subnets_2.id]
-//    subnets = [
-//      aws_subnet.public_subnets[0].id,
-//      aws_subnet.public_subnets[1].id,
-//    ]
-//  enable_deletion_protection = false
-//}
-
 resource "aws_lb" "test" {
   name               = "test-lb-tf"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.app_access_config.id]
   subnets            = [for subnet in aws_subnet.public_subnets : subnet.id]
-
   enable_deletion_protection = false
-
-
   tags = {
     Environment = "production"
   }
@@ -180,18 +141,13 @@ resource "aws_lb_target_group_attachment" "web_server" {
   port             = 80
 }
 
-//resource "aws_lb_target_group_attachment" "app_target_group_attachment" {
-//  count = 2
-//
-//  target_group_arn = "${aws_lb_target_group.main.arn}"
-//  target_id        = "${aws_instance.app[count.index].id}"
-//}
 
 resource "aws_instance" "database" {
     ami = data.aws_ami.ubuntu.id
     instance_type = "t2.micro"
     key_name = aws_key_pair.admin.key_name
     security_groups = [aws_security_group.db_access_config.name]
+    associate_public_ip_address = true
     tags = {
         Name = "${var.app_name} database"
     }
