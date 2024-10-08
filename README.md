@@ -96,7 +96,7 @@ Both security groups are open on:
 - Launches the database instance in a public subnet
 
 S3
-- Stores the terraform state file in the cloud 
+- The S3 backend configuration in Terraform allows to the state file in an Amazon S3 bucket, enabling centralized management, versioning, and security.
 
 ### Ansible
 
