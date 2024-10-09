@@ -39,6 +39,14 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
+    - name: Set Up AWS Cli
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          aws-session-token: ${{vars.AWS_SESSION_TOKEN}}
+
     - name: Get Public IP Address
       id: get_ip
       run: echo "ip_address=$(curl -s icanhazip.com)" >> $GITHUB_ENV
