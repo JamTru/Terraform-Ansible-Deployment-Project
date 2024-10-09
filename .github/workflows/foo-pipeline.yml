@@ -1,5 +1,5 @@
 name: Foo Pipeline
-run-name: Pipeline Ran On ${{github.ref_name}} by ${{github.actor}}
+run-name: Foo App Deployment by ${{github.actor}} ${{github.run_id}}
 on:
   push:
     branches:
