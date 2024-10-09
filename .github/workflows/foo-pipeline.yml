@@ -121,14 +121,14 @@ jobs:
         echo "$ini_content" > terraform-infra/${{ env.ini_file }}
         mv terraform-infra/'"inventory.ini"' terraform-infra/inventory.ini
     - name: Run Ansible Playbook for Database
-      uses: dawidd6/action-ansible-playbook@v2
+      uses: dawidd6/action-ansible-playbook@v2.8.0
       with:
         inventory: terraform-infra/inventory.ini
         playbook: ansible/database-playbook.yml
         private_key: ${{secrets.SSH_KEY_PRIV}}
 
     - name: Run Ansible Playbook for Application
-      uses: imranismail/run-ansible-playbook@v1
+      uses: dawidd6/action-ansible-playbook@v2.8.0
       with:
         inventory: terraform-infra/inventory.ini
         playbook: ansible/app-playbook.yml
