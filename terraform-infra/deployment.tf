@@ -57,9 +57,9 @@ resource "aws_subnet" "public_subnets" {
 }
 
 variable "azs" {
- type        = list(string)
- description = "Availability Zones"
- default     = ["us-east-1a", "us-east-1b"]
+  type        = list(string)
+  description = "Availability Zones"
+  default     = ["us-east-1a", "us-east-1b"]
 }
 
 
