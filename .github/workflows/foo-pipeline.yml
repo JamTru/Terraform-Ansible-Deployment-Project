@@ -110,14 +110,12 @@ jobs:
       uses: actions/checkout@v4
     - name: Generate INI File
       run: |
-        cat <<EOF > terraform-infra/${{ env.ini_file }}
-        [app]
-        app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}
-        app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}
+        echo "[app]" >> terraform-infra/${{ env.ini_file }}
+        echo "app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}" >> terraform-infra/${{ env.ini_file }}
+        echo "app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}" >> terraform-infra/${{ env.ini_file }}
+        echo "[database]" >> terraform-infra/${{ env.ini_file }}
+        echo "db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}" >> terraform-infra/${{ env.ini_file }}
 
-        [database]
-        db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}
-        EOF
     - name: Run Ansible Playbook for Database
       uses: dawidd6/action-ansible-playbook@v2.8.0
       with:
