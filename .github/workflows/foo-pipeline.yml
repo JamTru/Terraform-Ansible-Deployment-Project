@@ -121,11 +121,11 @@ jobs:
       with:
         inventory: |
           [app]
-          app1 ansible_host=${{app1_dns}} app_ip=${{app1_ip}}
-          app2 ansible_host=${{app2_dns}} app_ip=${{app2_ip}}
+          app1 ansible_host=${{env.app1_dns}} app_ip=${{env.app1_ip}}
+          app2 ansible_host=${{env.app2_dns}} app_ip=${{env.app2_ip}}
 
           [database]
-          db1 ansible_host=${db_dns} db_ip=${db_ip}
+          db1 ansible_host=${{env.db_dns}} db_ip=${{env.db_ip}}
         playbook: ansible/database-playbook.yml
         key: ${{secrets.SSH_KEY_PRIV}}
 
