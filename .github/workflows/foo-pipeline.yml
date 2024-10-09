@@ -14,17 +14,17 @@ jobs:
 
       - name: Debug AWS Secrets
         run: |
-          echo "Access Key ID is set: ${{ vars.AWS_ACCESS_KEY_ID != '' }}"
-          echo "Secret Access Key is set: ${{ vars.AWS_SECRET_ACCESS_KEY != '' }}"
-          echo "Session Token is set: ${{ vars.AWS_SESSION_TOKEN != '' }}"
+          echo "Access Key ID is set: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
+          echo "Secret Access Key is set: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+          echo "Session Token is set: ${{ secrets.AWS_SESSION_TOKEN != '' }}"
 
       - name: Set Up AWS Cli
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-          aws-session-token: ${{vars.AWS_SESSION_TOKEN}}
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
       - name: Test AWS Credentials
         run: aws sts get-caller-identity
@@ -41,10 +41,10 @@ jobs:
     - name: Set Up AWS Cli
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ vars.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
-        aws-session-token: ${{vars.AWS_SESSION_TOKEN}}
+        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
     - name: Get Public IP Address
       id: get_ip
@@ -56,6 +56,11 @@ jobs:
     - name: Initialise Terraform
       id: terraform-init
       run: terraform init
+      env:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
     - name: Terraform Validate
       id: validate
@@ -70,18 +75,27 @@ jobs:
       run: |
         if ! terraform show -json tfplan | jq '.resource_changes | length' | grep -q '0'; then
           echo "Changes detected. Applying Terraform configuration."
-          terraform apply -auto-approve tfplan
         else
           echo "No changes detected. Exiting."
           exit 0
         fi
-
+    - name: Terraform Apply
+      working-directory: ./terraform-infra
+      run: terraform apply -auto-approve tfplan
+      env:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+        path_to_ssh_public_key: ${{secrets.SSH_KEY_PUB}}
     - name: Set Terraform Outputs
       id: outputs
       run: |
         echo "ini_file=$(terraform output ini_file)" >> $GITHUB_ENV
-        echo "app_dns=$(terraform output -raw app_public_hostname)" >> $GITHUB_ENV
-        echo "app_ip=$(terraform output -raw app_public_ip)" >> $GITHUB_ENV
+        echo "app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')" >> $GITHUB_ENV
+        echo "app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')" >> $GITHUB_ENV
+        echo "app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')" >> $GITHUB_ENV
+        echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV
         echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
         echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
 
@@ -91,16 +105,15 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-    - name: Run Ansible playbook
-      uses: dawidd6/action-ansible-playbook@v2.8.0
     - name: Generate INI File
       run: |
         ini_content="
         [app]
-        app1 ansible_host=${{ env.app_dns }} app_ip=${{ env.app_ip }}
+        app1 ansible_host=${app1_dns} app_ip=${app1_ip}
+        app2 ansible_host=${app2_dns} app_ip=${app2_ip}
 
         [database]
-        db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}
+        db1 ansible_host=${db_dns} db_ip=${db_ip}
         "
         echo "$ini_content" > terraform-infra/${{ env.ini_file }}
         mv terraform-infra/'"inventory.ini"' terraform-infra/inventory.ini
@@ -109,12 +122,12 @@ jobs:
       with:
         inventory: terraform-infra/inventory.ini
         playbook: ansible/database-playbook.yml
-        private_key: ${{secrets.SSH_PRIVATE_KEY}}
+        private_key: ${{secrets.SSH_KEY_PRIV}}
 
     - name: Run Ansible Playbook for Application
       uses: imranismail/run-ansible-playbook@v1
       with:
         inventory: terraform-infra/inventory.ini
         playbook: ansible/app-playbook.yml
-        private_key: ${{ secrets.SSH_PRIVATE_KEY }}
+        private_key: ${{ secrets.SSH_KEY_PRIV}}
         extra_args: "-e app_image=mattcul/assignment2app:1.0.0"
