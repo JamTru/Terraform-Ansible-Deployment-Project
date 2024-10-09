@@ -50,6 +50,9 @@ jobs:
       id: get_ip
       run: echo "ip_address=$(curl -s icanhazip.com)" >> $GITHUB_ENV
 
+    - name: Create SSH public key file
+      run: echo "${{ secrets.SSH_KEY_PUB }}" > ./local_pub_key.pub
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
 
@@ -57,7 +60,7 @@ jobs:
       id: terraform-init
       run: terraform init
       env:
-        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
         aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         aws-region: us-east-1
         aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
@@ -83,7 +86,7 @@ jobs:
       working-directory: ./terraform-infra
       run: terraform apply -auto-approve tfplan
       env:
-        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
         aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         aws-region: us-east-1
         aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
