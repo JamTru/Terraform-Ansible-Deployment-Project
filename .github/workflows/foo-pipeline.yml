@@ -103,5 +103,3 @@ jobs:
         playbook: ansible/app-playbook.yml
         private_key: ${{ secrets.SSH_PRIVATE_KEY }}
         extra_args: "-e app_image=mattcul/assignment2app:1.0.0"
-    - name: Echo Public Application Link
-      run: echo "Link to Application: http://${{ env.app_ip }}"
