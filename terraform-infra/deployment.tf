@@ -247,7 +247,7 @@ resource "aws_security_group" "db_access_config" {
 terraform {
   backend "s3" {
     # bucket         = "terraform-bucket1234567"  # Abel Bucket
-    bucket = "terraform-state-j " # Jamie Bucket
+    bucket = "terraform-state-j" # Jamie Bucket
     key = "global/s3/terraform.tfstate"
     region = "us-east-1"
   }
