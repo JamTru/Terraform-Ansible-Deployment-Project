@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-permissions:
-      id-token: write   # This is required for requesting the JWT
-      contents: read
 
 jobs:
   setup-credentials:
@@ -14,6 +11,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Debug AWS Secrets
+        run: |
+          echo "Access Key ID is set: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}"
+          echo "Secret Access Key is set: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' }}"
+          echo "Session Token is set: ${{ secrets.AWS_SESSION_TOKEN != '' }}"
 
       - name: Set Up AWS Cli
         uses: aws-actions/configure-aws-credentials@v4
