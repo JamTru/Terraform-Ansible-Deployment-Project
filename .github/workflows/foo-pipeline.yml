@@ -41,8 +41,8 @@ jobs:
     - name: Set Up AWS Cli
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
+        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         aws-region: us-east-1
         aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
@@ -57,8 +57,8 @@ jobs:
       id: terraform-init
       run: terraform init
       env:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         aws-region: us-east-1
         aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
 
@@ -83,8 +83,8 @@ jobs:
       working-directory: ./terraform-infra
       run: terraform apply -auto-approve tfplan
       env:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
         aws-region: us-east-1
         aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
         path_to_ssh_public_key: ${{secrets.SSH_KEY_PUB}}
@@ -129,5 +129,5 @@ jobs:
       with:
         inventory: terraform-infra/inventory.ini
         playbook: ansible/app-playbook.yml
-        private_key: ${{ secrets.SSH_KEY_PRIV}}
+        private_key: ${{secrets.SSH_KEY_PRIV}}
         extra_args: "-e app_image=mattcul/assignment2app:1.0.0"
