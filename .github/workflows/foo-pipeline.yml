@@ -110,16 +110,12 @@ jobs:
       uses: actions/checkout@v4
     - name: Generate INI File
       run: |
-        ini_content="
-        [app]
-        app1 ansible_host=${app1_dns} app_ip=${app1_ip}
-        app2 ansible_host=${app2_dns} app_ip=${app2_ip}
-
+        echo "[app]
+        app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}
+        app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}
         [database]
-        db1 ansible_host=${db_dns} db_ip=${db_ip}
-        "
-        echo "$ini_content" > terraform-infra/${{ env.ini_file }}
-        mv terraform-infra/'"inventory.ini"' terraform-infra/inventory.ini
+        db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}
+        " > terraform-infra/${{ env.ini_file }}
     - name: Run Ansible Playbook for Database
       uses: dawidd6/action-ansible-playbook@v2.8.0
       with:
