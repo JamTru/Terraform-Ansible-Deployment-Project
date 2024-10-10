@@ -149,7 +149,6 @@ AWS_SECRET_KEY_ID
 AWS_SECRET_ACCESS_KEY
 AWS_SESSION_TOKEN
 ```
-It prints messages to the console indicating whether each secret is set or not. 
   3. Set Up AWS CLI: This step configures the AWS Command-Line Interface (CLI) tool with the retrieved AWS credentials.
   4. Test AWS Credentials: This step runs the aws sts get-caller-identity command to verify the validity of the configured AWS credentials.
 
