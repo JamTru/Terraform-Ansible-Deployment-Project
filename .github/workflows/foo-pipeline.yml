@@ -45,7 +45,6 @@ jobs:
         working-directory: ./terraform-infra
         run: echo "${{ secrets.SSH_KEY_PUB }}" > ./local_pub_key.pub
       - name: Setup Terraform
-        working-directory: ./terraform-infra
         uses: hashicorp/setup-terraform@v3
       - name: Initialise Terraform
         working-directory: ./terraform-infra
