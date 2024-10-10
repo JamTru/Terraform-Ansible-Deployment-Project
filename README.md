@@ -15,7 +15,6 @@
 - [Infrastructure](#infrastructure)
   - [Terraform](#terraform)
   - [Ansible](#ansible)
-- [Diagrams](#diagrams)
 
 ## Summary
 The solution is designed to accomplish Alpine's business goal of automating their deployment process with greater resiliency by utilising Terraform and Ansible as the primary tools to handle the creation and configuration of the underlying infrastructure the Foo application and database will be hosted on.
@@ -65,6 +64,45 @@ The deployment shell script will handle the following tasks in this sequence:
 ![Deployment Bash Script Processes](misc/process_diagram.svg)
 
 #### GitHub Actions Workflow
+![ICT  - Page 16](https://github.com/user-attachments/assets/434cc206-1cce-4fbd-b437-2350bc683ee7)
+
+The Foo Pipeline automates the deployment process by executing a series of jobs in a specific order. It can be triggered by:
+- Push to main branch: When someone pushes code to the main branch of the associated repository.
+
+The pipeline consists of two main jobs:
+- validate-credentials
+- deploy-infra
+
+> validate-credentials
+- The validate-credentials job in this GitHub Actions workflow is primarily responsible for ensuring that the necessary AWS credentials are correctly configured and accessible within the pipeline.
+- 1. Checkout Code: This step fetches the required code from the GitHub repository where the workflow is defined. This code might contain additional configuration or scripts necessary for the validation process.
+  2. Debug AWS Secrets: This step checks if the following AWS secrets are defined and non-empty:
+```  
+AWS_SECRET_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_SESSION_TOKEN
+```
+  3. Set Up AWS CLI: This step configures the AWS Command-Line Interface (CLI) tool with the retrieved AWS credentials.
+  4. Test AWS Credentials: This step runs the aws sts get-caller-identity command to verify the validity of the configured AWS credentials.
+
+
+> deploy-infra
+- The deploy-infra job in this GitHub Actions workflow is responsible for deploying the infrastructure and application on AWS. This job depends on the successful completion of the validate-credentials
+  1. Setting Up the Environment:
+     - Checkout Code: Fetches the necessary code from the GitHub repository.
+     - Configure AWS CLI: Sets up the AWS CLI tool with credentials retrieved from the GitHub Secrets
+     - Get Public IP Address: Retrieves the public IP address of the runner machine
+     - Create SSH Public Key File: Creates a file named local_pub_key.pub in the ./terraform-infra
+     - Setup Terraform: Installs the Terraform CLI tool in the runner environment.
+  2. Run Terraform
+     -  Initialize Terraform: Initializes the Terraform
+     -  Validate Terraform: Runs the terraform validate command to check for any errors or syntax issues
+     -  Terraform Plan: Creates a plan for the infrastructure deployment using the terraform plan
+     -  Terraform Apply: Executes the terraform apply command
+     -  Display Outputs: Retrieves information about the deployed resources using Terraform outputs. These outputs are stored an INI file for later use.
+  3. Run Ansible
+     - Database Playbook: Executes the database playbook
+     - Application Playbook: Executes the application playbook
 
 
 ## Infrastructure
@@ -129,44 +167,4 @@ As it is unlikely for the database to change as often as the application's docke
 
 Additionally, Ansible by default searches for files to copy from the directory it is executed in, within the subdirectory `/files`, and as such, it was easier to copy over the SQL into the `ansible/files` directory to make it easier to retrieve.
 
-### Github Actions 
 
-![ICT  - Page 16](https://github.com/user-attachments/assets/434cc206-1cce-4fbd-b437-2350bc683ee7)
-
-The Foo Pipeline automates the deployment process by executing a series of jobs in a specific order. It can be triggered by:
-- Push to main branch: When someone pushes code to the main branch of the associated repository.
-
-The pipeline consists of two main jobs:
-- validate-credentials
-- deploy-infra
-
-> validate-credentials
-- The validate-credentials job in this GitHub Actions workflow is primarily responsible for ensuring that the necessary AWS credentials are correctly configured and accessible within the pipeline.
-- 1. Checkout Code: This step fetches the required code from the GitHub repository where the workflow is defined. This code might contain additional configuration or scripts necessary for the validation process.
-  2. Debug AWS Secrets: This step checks if the following AWS secrets are defined and non-empty:
-```  
-AWS_SECRET_KEY_ID
-AWS_SECRET_ACCESS_KEY
-AWS_SESSION_TOKEN
-```
-  3. Set Up AWS CLI: This step configures the AWS Command-Line Interface (CLI) tool with the retrieved AWS credentials.
-  4. Test AWS Credentials: This step runs the aws sts get-caller-identity command to verify the validity of the configured AWS credentials.
-
-
-> deploy-infra
-- The deploy-infra job in this GitHub Actions workflow is responsible for deploying the infrastructure and application on AWS. This job depends on the successful completion of the validate-credentials
-  1. Setting Up the Environment:
-     - Checkout Code: Fetches the necessary code from the GitHub repository.
-     - Configure AWS CLI: Sets up the AWS CLI tool with credentials retrieved from the GitHub Secrets
-     - Get Public IP Address: Retrieves the public IP address of the runner machine
-     - Create SSH Public Key File: Creates a file named local_pub_key.pub in the ./terraform-infra
-     - Setup Terraform: Installs the Terraform CLI tool in the runner environment.
-  2. Run Terraform
-     -  Initialize Terraform: Initializes the Terraform
-     -  Validate Terraform: Runs the terraform validate command to check for any errors or syntax issues
-     -  Terraform Plan: Creates a plan for the infrastructure deployment using the terraform plan
-     -  Terraform Apply: Executes the terraform apply command
-     -  Display Outputs: Retrieves information about the deployed resources using Terraform outputs. These outputs are stored an INI file for later use.
-  3. Run Ansible
-     - Database Playbook: Executes the database playbook
-     - Application Playbook: Executes the application playbook
