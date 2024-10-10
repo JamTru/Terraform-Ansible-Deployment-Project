@@ -71,7 +71,6 @@ jobs:
         run:  |
           if [[ $(terraform show -json tfplan | jq '.resource_changes | length') -gt 0 ]]; then
             echo "Changes detected. Applying Terraform configuration."
-            # Add your terraform apply command here
           else
             echo "No changes detected. Exiting."
             exit 1
