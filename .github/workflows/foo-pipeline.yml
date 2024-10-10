@@ -86,22 +86,22 @@ jobs:
       - name: Display Outputs
         working-directory: ./terraform-infra
         run: |
-          terraform output -json app_public_hostname | jq -r '.[0]'
-          terraform output -json app_public_ip | jq -r '.[0]'
-          terraform output -json app_public_hostname | jq -r '.[1]'
-          terraform output -json app_public_ip | jq -r '.[1]'
-          terraform output -raw db_public_hostname
-          terraform output -raw db_public_ip
+          echo "app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')" >> $GITHUB_ENV
+          echo "app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')" >> $GITHUB_ENV
+          echo "app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')" >> $GITHUB_ENV
+          echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV
+          echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
+          echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
       - name: Run Ansible Playbook for Database
         uses: dawidd6/action-ansible-playbook@v2.8.0
         with:
           inventory: |
             [app]
-            app1 ansible_host=${{terraform output -json app_public_hostname | jq -r '.[0]'}} app_ip=${{terraform output -json app_public_ip | jq -r '.[0]'}}
-            app2 ansible_host=${{terraform output -json app_public_hostname | jq -r '.[1]'}} app_ip=${{terraform output -json app_public_ip | jq -r '.[1]'}}
+            app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}
+            app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}
 
             [database]
-            db1 ansible_host=${{terraform output -raw db_public_hostname}} db_ip=${{terraform output -raw db_public_ip}}
+            db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}
           playbook: ansible/database-playbook.yml
           key: ${{secrets.SSH_KEY_PRIV}}
       - name: Run Ansible Playbook for Application
@@ -109,11 +109,11 @@ jobs:
         with:
           inventory: |
             [app]
-            app1 ansible_host=${{terraform output -json app_public_hostname | jq -r '.[0]'}} app_ip=${{terraform output -json app_public_ip | jq -r '.[0]'}}
-            app2 ansible_host=${{terraform output -json app_public_hostname | jq -r '.[1]'}} app_ip=${{terraform output -json app_public_ip | jq -r '.[1]'}}
+            app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}
+            app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}
 
             [database]
-            db1 ansible_host=${{terraform output -raw db_public_hostname}} db_ip=${{terraform output -raw db_public_ip}}
+            db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}
           playbook: ansible/app-playbook.yml
           key: ${{secrets.SSH_KEY_PRIV}}
           options: |
