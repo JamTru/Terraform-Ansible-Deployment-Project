@@ -103,6 +103,7 @@ jobs:
         echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
         echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
 
+
   ansible-execute:
     runs-on: ubuntu-latest
     needs: terraform-infra
