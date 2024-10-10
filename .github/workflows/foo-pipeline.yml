@@ -86,21 +86,14 @@ jobs:
       - name: Set Terraform Outputs
         id: outputs
         run: |
-          set -e
-
-          echo "ini_file=$(terraform output ini_file)" >> $GITHUB_ENV
-
-          echo "app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')" >> $GITHUB_ENV
-
-          echo "app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')" >> $GITHUB_ENV
-
-          echo "app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')" >> $GITHUB_ENV
-
-          echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV
-
-          echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
-
-          echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
+          set -e;
+          echo "ini_file=$(terraform output ini_file)" >> $GITHUB_ENV;
+          echo "app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')" >> $GITHUB_ENV;
+          echo "app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')" >> $GITHUB_ENV;
+          echo "app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')" >> $GITHUB_ENV;
+          echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV;
+          echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV;
+          echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV;
   ansible-execute:
     runs-on: ubuntu-latest
     needs: terraform-infra
