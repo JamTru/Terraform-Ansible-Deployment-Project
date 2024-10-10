@@ -1,23 +1,23 @@
+---
 name: Foo Pipeline
 run-name: Foo App Deployment by ${{github.actor}} ${{github.run_id}}
 on:
   push:
     branches:
       - main
-
 jobs:
   setup-credentials:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
       - name: Debug AWS Secrets
         run: |
           echo "Access Key ID is set: ${{secrets.AWS_SECRET_KEY_ID != ''}}"
-          echo "Secret Access Key is set: ${{secrets.AWS_SECRET_ACCESS_KEY != ''}}"
-          echo "Session Token is set: ${{secrets.AWS_SESSION_TOKEN != ''}}"
 
+          echo "Secret Access Key is set: ${{secrets.AWS_SECRET_ACCESS_KEY != ''}}"
+
+          echo "Session Token is set: ${{secrets.AWS_SESSION_TOKEN != ''}}"
       - name: Set Up AWS Cli
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -25,10 +25,8 @@ jobs:
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: us-east-1
           aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
-
       - name: Test AWS Credentials
         run: aws sts get-caller-identity
-
   terraform-infra:
     runs-on: ubuntu-latest
     needs: setup-credentials
@@ -36,112 +34,113 @@ jobs:
       run:
         working-directory: ./terraform-infra
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-    - name: Set Up AWS Cli
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
-        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-        aws-region: us-east-1
-        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Set Up AWS Cli
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-region: us-east-1
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+      - name: Get Public IP Address
+        id: get_ip
+        run: echo "ip_address=$(curl -s icanhazip.com)" >> $GITHUB_ENV
+      - name: Create SSH public key file
+        run: echo "${{ secrets.SSH_KEY_PUB }}" > ./local_pub_key.pub
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Initialise Terraform
+        id: terraform-init
+        run: terraform init
+        env:
+          aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-region: us-east-1
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+      - name: Terraform Plan
+        id: plan
+        run: |
+          terraform plan -var="my_ip_address=${{ env.ip_address }}" -out=tfplan
+      - name: Check for Changes
+        run: |
+          if ! terraform show -json tfplan | jq '.resource_changes | length' | grep
+          -q '0'; then
+            echo "Changes detected. Applying Terraform configuration."
+          else
+            echo "No changes detected. Exiting."
+            exit 0
+          fi
+      - name: Terraform Apply
+        working-directory: ./terraform-infra
+        run: terraform apply -auto-approve tfplan
+        env:
+          aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
+          aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+          aws-region: us-east-1
+          aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+          path_to_ssh_public_key: ${{secrets.SSH_KEY_PUB}}
+      - name: Set Terraform Outputs
+        id: outputs
+        run: |
+          set -e
 
-    - name: Get Public IP Address
-      id: get_ip
-      run: echo "ip_address=$(curl -s icanhazip.com)" >> $GITHUB_ENV
+          echo "ini_file=$(terraform output ini_file)" >> $GITHUB_ENV
 
-    - name: Create SSH public key file
-      run: echo "${{ secrets.SSH_KEY_PUB }}" > ./local_pub_key.pub
+          echo "app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')" >> $GITHUB_ENV
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+          echo "app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')" >> $GITHUB_ENV
 
-    - name: Initialise Terraform
-      id: terraform-init
-      run: terraform init
-      env:
-        aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
-        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-        aws-region: us-east-1
-        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+          echo "app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')" >> $GITHUB_ENV
 
-    - name: Terraform Validate
-      id: validate
-      run: terraform validate
+          echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV
 
-    - name: Terraform Plan
-      id: plan
-      run: |
-        terraform plan -var="my_ip_address=${{ env.ip_address }}" -out=tfplan
+          echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
 
-    - name: Check for Changes
-      run: |
-        if ! terraform show -json tfplan | jq '.resource_changes | length' | grep -q '0'; then
-          echo "Changes detected. Applying Terraform configuration."
-        else
-          echo "No changes detected. Exiting."
-          exit 0
-        fi
-    - name: Terraform Apply
-      working-directory: ./terraform-infra
-      run: terraform apply -auto-approve tfplan
-      env:
-        aws-access-key-id: ${{secrets.AWS_SECRET_KEY_ID}}
-        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-        aws-region: us-east-1
-        aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
-        path_to_ssh_public_key: ${{secrets.SSH_KEY_PUB}}
-    - name: Set Terraform Outputs
-      id: outputs
-      run: |
-        set -e
-        echo "ini_file=$(terraform output ini_file)" >> $GITHUB_ENV
-        echo "app1_dns=$(terraform output -json app_public_hostname | jq -r '.[0]')" >> $GITHUB_ENV
-        echo "app1_ip=$(terraform output -json app_public_ip | jq -r '.[0]')" >> $GITHUB_ENV
-        echo "app2_dns=$(terraform output -json app_public_hostname | jq -r '.[1]')" >> $GITHUB_ENV
-        echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV
-        echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
-        echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
-
-
+          echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
   ansible-execute:
     runs-on: ubuntu-latest
     needs: terraform-infra
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-    - name: Generate INI File
-      run: |
-        echo "[app]" >> terraform-infra/inventory.ini
-        echo "app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}" >> terraform-infra/inventory.ini
-        echo "app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}" >> terraform-infra/inventory.ini
-        echo "[database]" >> terraform-infra/inventory.ini
-        echo "db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}" >> terraform-infra/inventory.ini
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      - name: Generate INI File
+        run: >
+          echo "[app]" >> terraform-infra/inventory.ini
 
-    - name: Run Ansible Playbook for Database
-      uses: dawidd6/action-ansible-playbook@v2.8.0
-      with:
-        inventory: |
-          [app]
-          app1 ansible_host=${{env.app1_dns}} app_ip=${{env.app1_ip}}
-          app2 ansible_host=${{env.app2_dns}} app_ip=${{env.app2_ip}}
+          echo "app1 ansible_host=${{ env.app1_dns }} app_ip=${{ env.app1_ip }}" >> terraform-infra/inventory.ini
 
-          [database]
-          db1 ansible_host=${{env.db_dns}} db_ip=${{env.db_ip}}
-        playbook: ansible/database-playbook.yml
-        key: ${{secrets.SSH_KEY_PRIV}}
+          echo "app2 ansible_host=${{ env.app2_dns }} app_ip=${{ env.app2_ip }}" >> terraform-infra/inventory.ini
 
-    - name: Run Ansible Playbook for Application
-      uses: dawidd6/action-ansible-playbook@v2.8.0
-      with:
-        inventory: |
-          [app]
-          app1 ansible_host=${{env.app1_dns}} app_ip=${{env.app1_ip}}
-          app2 ansible_host=${{env.app2_dns}} app_ip=${{env.app2_ip}}
+          echo "[database]" >> terraform-infra/inventory.ini
 
-          [database]
-          db1 ansible_host=${{env.db_dns}} db_ip=${{env.db_ip}}
-        playbook: ansible/app-playbook.yml
-        key: ${{secrets.SSH_KEY_PRIV}}
-        options: |
-          --extra-vars app_image=mattcul/assignment2app:1.0.0
+          echo "db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}" >> terraform-infra/inventory.ini
+      - name: Run Ansible Playbook for Database
+        uses: dawidd6/action-ansible-playbook@v2.8.0
+        with:
+          inventory: |
+            [app]
+            app1 ansible_host=${{env.app1_dns}} app_ip=${{env.app1_ip}}
+            app2 ansible_host=${{env.app2_dns}} app_ip=${{env.app2_ip}}
+
+            [database]
+            db1 ansible_host=${{env.db_dns}} db_ip=${{env.db_ip}}
+          playbook: ansible/database-playbook.yml
+          key: ${{secrets.SSH_KEY_PRIV}}
+      - name: Run Ansible Playbook for Application
+        uses: dawidd6/action-ansible-playbook@v2.8.0
+        with:
+          inventory: |
+            [app]
+            app1 ansible_host=${{env.app1_dns}} app_ip=${{env.app1_ip}}
+            app2 ansible_host=${{env.app2_dns}} app_ip=${{env.app2_ip}}
+
+            [database]
+            db1 ansible_host=${{env.db_dns}} db_ip=${{env.db_ip}}
+          playbook: ansible/app-playbook.yml
+          key: ${{secrets.SSH_KEY_PRIV}}
+          options: |
+            --extra-vars app_image=mattcul/assignment2app:1.0.0
