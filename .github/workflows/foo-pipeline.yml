@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+  repository_dispatch:
+    types: [deploy_foo]
 jobs:
   validate-credentials:
     runs-on: ubuntu-latest
@@ -66,13 +68,13 @@ jobs:
           terraform plan -var="my_ip_address=${{ env.ip_address }}" -out=tfplan
       - name: Check for Changes
         working-directory: ./terraform-infra
-        run: |
-          if ! terraform show -json tfplan | jq '.resource_changes | length' | grep
-          -q '0'; then
+        run:  |
+          if [[ $(terraform show -json tfplan | jq '.resource_changes | length') -gt 0 ]]; then
             echo "Changes detected. Applying Terraform configuration."
+            # Add your terraform apply command here
           else
             echo "No changes detected. Exiting."
-            exit 0
+            exit 1
           fi
       - name: Terraform Apply
         working-directory: ./terraform-infra
