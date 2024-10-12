@@ -13,11 +13,13 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Debug AWS Secrets
         run: |
           echo "Access Key ID is set: ${{secrets.AWS_SECRET_KEY_ID != ''}}"
           echo "Secret Access Key is set: ${{secrets.AWS_SECRET_ACCESS_KEY != ''}}"
           echo "Session Token is set: ${{secrets.AWS_SESSION_TOKEN != ''}}"
+
       - name: Set Up AWS Cli
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -25,14 +27,17 @@ jobs:
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: us-east-1
           aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+
       - name: Test AWS Credentials
         run: aws sts get-caller-identity
+
   deploy-infra:
     runs-on: ubuntu-latest
     needs: validate-credentials
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
       - name: Set Up AWS Cli
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -40,14 +45,18 @@ jobs:
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: us-east-1
           aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+
       - name: Get Public IP Address
         id: get_ip
         run: echo "ip_address=$(curl -s icanhazip.com)" >> $GITHUB_ENV
+
       - name: Create SSH public key file
         working-directory: ./terraform-infra
         run: echo "${{ secrets.SSH_KEY_PUB }}" > ./local_pub_key.pub
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
+
       - name: Initialise Terraform
         working-directory: ./terraform-infra
         id: terraform-init
@@ -57,15 +66,18 @@ jobs:
           aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
           aws-region: us-east-1
           aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
+
       - name: Terraform Validate
         working-directory: ./terraform-infra
         id: validate
         run: terraform validate
+
       - name: Terraform Plan
         working-directory: ./terraform-infra
         id: plan
         run: |
           terraform plan -var="my_ip_address=${{ env.ip_address }}" -out=tfplan
+
       - name: Terraform Apply
         working-directory: ./terraform-infra
         run: terraform apply -auto-approve tfplan
@@ -75,6 +87,7 @@ jobs:
           aws-region: us-east-1
           aws-session-token: ${{secrets.AWS_SESSION_TOKEN}}
           path_to_ssh_public_key: ${{secrets.SSH_KEY_PUB}}
+
       - name: Display Outputs
         working-directory: ./terraform-infra
         run: |
@@ -84,6 +97,7 @@ jobs:
           echo "app2_ip=$(terraform output -json app_public_ip | jq -r '.[1]')" >> $GITHUB_ENV
           echo "db_dns=$(terraform output -raw db_public_hostname)" >> $GITHUB_ENV
           echo "db_ip=$(terraform output -raw db_public_ip)" >> $GITHUB_ENV
+
       - name: Run Ansible Playbook for Database
         uses: dawidd6/action-ansible-playbook@v2.8.0
         with:
@@ -96,6 +110,7 @@ jobs:
             db1 ansible_host=${{ env.db_dns }} db_ip=${{ env.db_ip }}
           playbook: ansible/database-playbook.yml
           key: ${{secrets.SSH_KEY_PRIV}}
+
       - name: Run Ansible Playbook for Application
         uses: dawidd6/action-ansible-playbook@v2.8.0
         with:

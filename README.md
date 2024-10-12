@@ -64,10 +64,12 @@ The deployment shell script will handle the following tasks in this sequence:
 ![Deployment Bash Script Processes](misc/process_diagram.svg)
 
 #### GitHub Actions Workflow
-![ICT  - Page 16](https://github.com/user-attachments/assets/434cc206-1cce-4fbd-b437-2350bc683ee7)
+![Github Actions Deployment Pipeline](https://github.com/user-attachments/assets/434cc206-1cce-4fbd-b437-2350bc683ee7)
 
 The Foo Pipeline automates the deployment process by executing a series of jobs in a specific order. It can be triggered by:
 - Push to main branch: When someone pushes code to the main branch of the associated repository.
+- An API call posted to `https://api.github.com/repos/S3947728/s3947728-s3953018-assignment-2
+/actions/workflows/WORKFLOW_ID/dispatches` with the request body containing `event_type: deploy_foo`
 
 The pipeline consists of two main jobs:
 - validate-credentials
@@ -77,7 +79,7 @@ The pipeline consists of two main jobs:
 - The validate-credentials job in this GitHub Actions workflow is primarily responsible for ensuring that the necessary AWS credentials are correctly configured and accessible within the pipeline.
 - 1. Checkout Code: This step fetches the required code from the GitHub repository where the workflow is defined. This code might contain additional configuration or scripts necessary for the validation process.
   2. Debug AWS Secrets: This step checks if the following AWS secrets are defined and non-empty:
-```  
+```
 AWS_SECRET_KEY_ID
 AWS_SECRET_ACCESS_KEY
 AWS_SESSION_TOKEN
@@ -87,12 +89,12 @@ AWS_SESSION_TOKEN
 
 
 > deploy-infra
-- The deploy-infra job in this GitHub Actions workflow is responsible for deploying the infrastructure and application on AWS. This job depends on the successful completion of the validate-credentials
+- The deploy-infra job in this GitHub Actions workflow is responsible for deploying the infrastructure and application on AWS. This job depends on the successful completion of the validate-credentials, to ensure that the deployment step doesn't fire if there are no secrets set up within the Repository. Note that the prior step does not validate the credentials are necessarily the same as the ones needed to SSH into the instances.
   1. Setting Up the Environment:
      - Checkout Code: Fetches the necessary code from the GitHub repository.
      - Configure AWS CLI: Sets up the AWS CLI tool with credentials retrieved from the GitHub Secrets
      - Get Public IP Address: Retrieves the public IP address of the runner machine
-     - Create SSH Public Key File: Creates a file named local_pub_key.pub in the ./terraform-infra
+     - Create SSH Public Key File: Creates a file named local_pub_key.pub in the ./terraform-infra from pre-existing key in Secrets.
      - Setup Terraform: Installs the Terraform CLI tool in the runner environment.
   2. Run Terraform
      -  Initialize Terraform: Initializes the Terraform
@@ -104,6 +106,7 @@ AWS_SESSION_TOKEN
      - Database Playbook: Executes the database playbook
      - Application Playbook: Executes the application playbook
 
+- Notably, the pipeline will always execute, but the tools themselves will already handle the idempotency of the deployment as it will always validate and recheck if the state has changed. This is known due to Terraform Plan command that outputs detection of different states, as well as the Ansible step using the `[ok]` response instead of the `[changed]` response to indicate updates have been made.
 
 ## Infrastructure
 ### Terraform
@@ -166,5 +169,3 @@ For the database instance, the Database Playbook follows these steps:
 As it is unlikely for the database to change as often as the application's docker image, it was decided to hard-code the Postgres image into the playbook for convenience. Additionally, it was necessary to directly copy the SQL file into the EC2 instance as it then allowed for the mounting of the SQL as a volume and thus set up the database on deployment before any applications need to access it.
 
 Additionally, Ansible by default searches for files to copy from the directory it is executed in, within the subdirectory `/files`, and as such, it was easier to copy over the SQL into the `ansible/files` directory to make it easier to retrieve.
-
-
